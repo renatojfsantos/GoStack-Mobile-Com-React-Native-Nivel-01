@@ -1,21 +1,51 @@
-import React from 'react';
-import { View, Text, StyleSheet, StatusBar } from 'react-native';
+import React, { useEffect, useState} from 'react';
+import { View, ScrollView, SafeAreaView, FlatList, Text, StyleSheet, StatusBar, TouchableOpacity } from 'react-native';
 
-//Não possuem valor semântico (significado)
-//Não possuem estilização própria
-//Todos os componentes possuem por padrão "display: flex"
-
-//View: div, footer, header, main, aside, section
-//Text: p, span, strong, h1, h2, h3
+import api from './services/api';
 
 export default function App() {
-  return (
-    <>
-      <StatusBar barStyle="light-content" backgroundColor="#7159c1"/>
-      <View style={styles.container}>
-        <Text style={styles.title}>Hello GoStack</Text>
-      </View>
-    </>
+  const [projects, SetProjects] = useState([]);
+
+  useEffect(() => {
+    api.get('projects').then(response => {
+      console.log(response.data);
+      SetProjects(response.data);
+  });
+}, []);
+
+async function handleAddProject() {
+  const response = await api.post('projects', {
+    title: `Novo projeto ${Date.now()}`,
+    owner: 'Renato Santos'
+  });
+
+  const project = response.data;
+
+  SetProjects([...projects, project]);
+}
+
+return (
+  <>
+    <StatusBar barStyle="light-content" backgroundColor="#7159c1"/>
+
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        data={projects}
+        keyExtractor={project => project.id}
+        renderItem={({item: project}) => (
+          <Text style={styles.project}>{project.title}</Text>
+        )}
+      />
+
+      <TouchableOpacity 
+        activeOpacity={0.6} 
+        style={styles.button} 
+        onPress={handleAddProject}
+      >
+        <Text style={styles.buttonText}>Adicionar Projeto</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  </>
   );
 }
 
@@ -23,13 +53,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#7159c1',
+  },
+
+  project: {
+    color: '#FFF',
+    fontSize: 30,
+  },
+
+  button: {
+    backgroundColor: '#FFF',
+    margin: 20,
+    height: 50,
+    borderRadius: 4,
     justifyContent: "center",
     alignItems: "center",
   },
 
-  title: {
-    color: '#FFF',
-    fontSize: 32,
+  buttonText: {
     fontWeight: "bold",
+    fontSize: 16,
   },
+
 });
